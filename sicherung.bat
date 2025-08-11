@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 
-Wenn Sie das Skript verwenden, können Sie uns über https://spenden.modellbahn-anlage.de gerne eine Kleinigkeit zukommen lassen, dann wird das Skript auch weiterentwickelt :)
+:: Wenn Sie das Skript verwenden, können Sie uns über https://spenden.modellbahn-anlage.de gerne eine Kleinigkeit zukommen lassen, dann wird das Skript auch weiterentwickelt :)
 
 :: Dieses Skript erstellt einen Ordner oder Datei mit dem Datum der Sicherung
 ::
