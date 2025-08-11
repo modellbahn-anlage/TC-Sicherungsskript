@@ -24,6 +24,7 @@ setlocal enabledelayedexpansion
 :: Version 2.0
 :: 2024-01-03: Löschen hinzugefügt - bitte dabei den Text bei der Einstellung DRINGEND dazu beachten!
 :: 2024-01-06: Vergessene Codezeilen durch GIT wieder eingefügt :) 
+:: 2025-08-11: Schreibfehler behoben, GIT Repository angelegt
 
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -121,7 +122,7 @@ if not %monataelteralseinjahrloeschen%==0 (
                 echo Lösche Ordner: !Ordner!
                 rmdir /s /q "!Ordner!"
             ) else (
-                echo Ueerspringe Jahressicherung: !Ordner!
+                echo Ueberspringe Jahressicherung: !Ordner!
             )
         )
     )
