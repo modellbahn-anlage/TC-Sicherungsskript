@@ -78,7 +78,7 @@ set monataelteralseinjahrloeschen=1
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 :: Prueft, ob Quelle vorhanden
-if not exist %quelle%\ (
+if not exist "%quelle%" (
    echo Das Skript wird abgebrochen, den Pfad %quelle% gibt es nicht!!!
    Pause
    EXIT
