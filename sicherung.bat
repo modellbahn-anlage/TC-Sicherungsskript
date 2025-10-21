@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 
-:: Wenn Sie das Skript verwenden, koennen Sie uns über https://spenden.modellbahn-anlage.de gerne eine Kleinigkeit zukommen lassen, dann wird das Skript auch weiterentwickelt :)
+:: Wenn Sie das Skript verwenden, koennen Sie uns ueber https://spenden.modellbahn-anlage.de gerne eine Kleinigkeit zukommen lassen, dann wird das Skript auch weiterentwickelt :)
 
 :: Dieses Skript erstellt einen Ordner oder Datei mit dem Datum der Sicherung
 ::
@@ -83,6 +83,18 @@ if not exist "%quelle%" (
    echo Das Skript wird abgebrochen, den Pfad %quelle% gibt es nicht!
    Pause
    EXIT
+)
+
+
+if "%quelle%"=="" (
+    echo Fehler: Der Quellpfad ist nicht gesetzt!
+    pause
+    exit /b
+)
+if "%ziel%"=="" (
+    echo Fehler: Der Zielpfad ist nicht gesetzt!
+    pause
+    exit /b
 )
 
 :: Datum ermitteln und in Variablen schreiben
