@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 
-:: Wenn Sie das Skript verwenden, können Sie uns über https://spenden.modellbahn-anlage.de gerne eine Kleinigkeit zukommen lassen, dann wird das Skript auch weiterentwickelt :)
+:: Wenn Sie das Skript verwenden, koennen Sie uns über https://spenden.modellbahn-anlage.de gerne eine Kleinigkeit zukommen lassen, dann wird das Skript auch weiterentwickelt :)
 
 :: Dieses Skript erstellt einen Ordner oder Datei mit dem Datum der Sicherung
 ::
@@ -18,13 +18,14 @@ setlocal enabledelayedexpansion
 :: 2019-02-21: Fehler Variable 7-Zip behoben.  Version 1.5.1
 ::			   Schluss "\" in den Variablen entfernt - führte zu keinen Fehlern, muss autom. in Zukunft überprüft werden...
 :: 2019-02-22: Einbau einer Funktion, um Daten zum Testsystem zu kopieren - Version 1.6
-:: 2020-08-29: Variable eingebaut, die später darüber entscheidet, ob nach der Jahressicherung die Monatssicherungen gelöscht werden sollen.
+:: 2020-08-29: Variable eingebaut, die später darüber entscheidet, ob nach der Jahressicherung die Monatssicherungen geloescht werden sollen.
 :: 2023-04-13: Datei nach GIT überführt
-:: 2023-04-14: Löschen von alten DATEIEN (nicht Ordnern!) optimiert (Doku angepasst)
+:: 2023-04-14: Loeschen von alten DATEIEN (nicht Ordnern!) optimiert (Doku angepasst)
 :: Version 2.0
-:: 2024-01-03: Löschen hinzugefügt - bitte dabei den Text bei der Einstellung DRINGEND dazu beachten!
+:: 2024-01-03: Loeschen hinzugefügt - bitte dabei den Text bei der Einstellung DRINGEND dazu beachten!
 :: 2024-01-06: Vergessene Codezeilen durch GIT wieder eingefügt :) 
 :: 2025-08-11: Schreibfehler behoben, GIT Repository angelegt
+:: 2025-10-21: Schreibfehler behoben
 
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -58,13 +59,13 @@ set monatssicherung=1
 :: Erstellung einer Jahressicherung? ja=1  nein=0
 set jahressicherung=1
 
-:: TAGESSICHERUNG: Aufbewahrungszeit der TAGESSICHERUNGEN in Tagen, Dateien (NICHT ORDNER!!!) über dem Zeitraum werden gelöscht (nicht Monats- oder Jahressicherungen)! 0=keine Löschung, Funktion deaktiviert.
+:: TAGESSICHERUNG: Aufbewahrungszeit der TAGESSICHERUNGEN in Tagen, Dateien (NICHT ORDNER!!!) über dem Zeitraum werden geloescht (nicht Monats- oder Jahressicherungen)! 0=keine Loeschung, Funktion deaktiviert.
 :: Sinn macht bei eingeschalteter Monats-Sicherung 31 Tage, danach bleibt die letzte Sicherung des Monats im Monatssicherungs-Ordner. 
 set aufbewahrungszeit=31
 
 :: LOESCHEN VON MONATSSICHERUNGEN
-:: Diese Funktion löscht die Ordner und Inhalte der Monatssicherungen, die CTER ALS 1 JAHR SIND! Monatssicherungen darunter werden nicht gelöscht! Wenn man überhaupt keine Löschung möchte, l?t man diesen Wert auf 0 stehen!
-:: Jahressicherungen werden NICHT (!) gelöscht, au?r man ?ert deren Dateiname! 
+:: Diese Funktion loescht die Ordner und Inhalte der Monatssicherungen, die CTER ALS 1 JAHR SIND! Monatssicherungen darunter werden nicht gelöscht! Wenn man überhaupt keine Löschung möchte, l?t man diesen Wert auf 0 stehen!
+:: Jahressicherungen werden NICHT (!) geloescht, ausser man aendert deren Dateiname! 
 set "minAlter=365"
 set monataelteralseinjahrloeschen=1
 
@@ -79,7 +80,7 @@ set monataelteralseinjahrloeschen=1
 
 :: Prueft, ob Quelle vorhanden
 if not exist "%quelle%" (
-   echo Das Skript wird abgebrochen, den Pfad %quelle% gibt es nicht!!!
+   echo Das Skript wird abgebrochen, den Pfad %quelle% gibt es nicht!
    Pause
    EXIT
 )
@@ -99,17 +100,17 @@ if not exist "%ziel%"\ md "%ziel%"\
 %programmpfad% a %ziel%\"%year%-%month%-%day%-%stunden%-%minuten%-%sekunden%-TC-Tages-Sicherung.zip" %quelle%
 
 ::::::::::::::::::::::::::::
-:: Alte ZIP-Files (Sicherungen) nach ... Tagen löschen
+:: Alte ZIP-Files (Sicherungen) nach ... Tagen loeschen
 if not %aufbewahrungszeit%==0 (
-   echo Sicherungen, ?er als %aufbewahrungszeit% Tage, werden gelöscht! 
+   echo Sicherungen, aelter als %aufbewahrungszeit% Tage, werden geloescht! 
    :: Loeschbefehl
    forfiles /p %ziel% /m *.* /d -%aufbewahrungszeit% /c "cmd /c del @path"
 )
 
 ::::::::::::::::::::::::::::
-:: Alte ORDNER (Monatssicherung, aelter als ein Jahr) löschen. Wenn dies gewaet ist, wird alles, au?r dem Jahresarchiv, gelöscht.
+:: Alte ORDNER (Monatssicherung, aelter als ein Jahr) loeschen. Wenn dies gewaehlt ist, wird alles, ausser dem Jahresarchiv, geloescht.
 if not %monataelteralseinjahrloeschen%==0 (
-    echo Monatssicherungen ?er als ein Jahr werden gelöscht! 
+    echo Monatssicherungen ?er als ein Jahr werden geloescht! 
     :: Loeschbefehl
     for /D %%i in ("%ziel%\*") do (
         set "Ordner=%%~fi"
@@ -119,7 +120,7 @@ if not %monataelteralseinjahrloeschen%==0 (
             echo ?erprüfe Ordner: !OrdnerName!
             echo !OrdnerName! | find /i "Jahressicherung" > nul
             if errorlevel 1 (
-                echo Lösche Ordner: !Ordner!
+                echo Loesche Ordner: !Ordner!
                 rmdir /s /q "!Ordner!"
             ) else (
                 echo Ueberspringe Jahressicherung: !Ordner!
