@@ -1,103 +1,114 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 
-
-:: Wenn Sie das Skript verwenden, koennen Sie uns ueber https://spenden.modellbahn-anlage.de gerne eine Kleinigkeit zukommen lassen, dann wird das Skript auch weiterentwickelt :)
-
-:: Dieses Skript erstellt einen Ordner oder Datei mit dem Datum der Sicherung
+:: ############################################################
+:: BACKUP-SKRIPT VERSION 2.2
+:: Erstellt ZIP-Sicherungen mit Tages-, Monats- und Jahresarchivierung
+:: Autor: Martin Fitzel
+:: ############################################################
 ::
+::
+::
+:: Wenn Sie das Skript verwenden, koennen Sie uns ueber https://spenden.modellbahn-anlage.de gerne eine Kleinigkeit zukommen lassen, dann wird das Skript auch weiterentwickelt :)
+::
+:: Dieses Skript erstellt einen Ordner oder Datei mit dem Datum der Sicherung
+:: ***********************************************************************************************************************************
 :: Skript Version 2.0
 :: Ersteller: Martin Fitzel - http://www.modellbahn-anlage.de
+:: ***********************************************************************************************************************************
+::
+::
 ::
 :: CHANGELOG
+:: ---------
 :: 2017-12-15: Erste Version 1.0
 :: 2019-02-12: Verbesserte Version 1.3
 :: 2019-02-14: Konzept Monatssicherung angedacht, automatisches Loeschen hinzugefuegt
 :: 2019-02-18: Monatssicherung + Jahressicherung realisiert
 :: 2019-02-19: Finalisiert als Version 1.5
 :: 2019-02-21: Fehler Variable 7-Zip behoben.  Version 1.5.1
-::			   Schluss "\" in den Variablen entfernt - führte zu keinen Fehlern, muss autom. in Zukunft überprüft werden...
+::			   Schluss "\" in den Variablen entfernt - fuehrte zu keinen Fehlern, muss autom. in Zukunft ueberprueft werden...
 :: 2019-02-22: Einbau einer Funktion, um Daten zum Testsystem zu kopieren - Version 1.6
-:: 2020-08-29: Variable eingebaut, die später darüber entscheidet, ob nach der Jahressicherung die Monatssicherungen geloescht werden sollen.
-:: 2023-04-13: Datei nach GIT überführt
+:: 2020-08-29: Variable eingebaut, die später darueber entscheidet, ob nach der Jahressicherung die Monatssicherungen geloescht werden sollen.
+:: 2023-04-13: Datei nach GIT ueberfuehrt
 :: 2023-04-14: Loeschen von alten DATEIEN (nicht Ordnern!) optimiert (Doku angepasst)
 :: Version 2.0
-:: 2024-01-03: Loeschen hinzugefügt - bitte dabei den Text bei der Einstellung DRINGEND dazu beachten!
-:: 2024-01-06: Vergessene Codezeilen durch GIT wieder eingefügt :) 
+:: 2024-01-03: Loeschen hinzugefuegt - bitte dabei den Text bei der Einstellung DRINGEND dazu beachten!
+:: 2024-01-06: Vergessene Codezeilen durch GIT wieder eingefuegt :) 
 :: 2025-08-11: Schreibfehler behoben, GIT Repository angelegt
-:: 2025-10-21: Schreibfehler behoben
+::             Diverse Aenderungen, Anpassungen
+::
+::
+::
+:: ------------------- KONFIGURATION ----------------------
+::
+:: Pfad zu 7-Zip (bitte ohne Anfuehrungszeichen)
+set "programmpfad=C:\Program Files\7-Zip\7z.exe"
 
+:: Quellpfad (Ordner, der gesichert werden soll)
+set "quelle=D:\Datenquelle"
 
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-::::                                                NUR HIER AENDERN!!!!                                            ::::
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:: Zielpfad fuer Sicherungen
+set "ziel=D:\Backups"
 
-:: Pfad zu 7-Zip (https://7-zip.de/) auf dem eigenen Computer
-set programmpfad="c:\Program Files\7-Zip\7z.exe"
-
-:: Quellpfad - von hier die Daten holen und in das ZIP packen. Es wird der ganze Ordner gepackt inkl. Unterordner (ohne \ am Ende)
-set quelle=""
-::set quelle="d:\Datenquelle"
-
-:: Zielpfad - hier werden die Daten abgelegt und Ordner erstellt Ordner wird erstellt, wenn nicht vorhanden (ohne \ am Ende)!
-set ziel=""
-
-:: Kopie zum Testsystem - hat man einen 2. Ordner mit den Dateien zum Testen, dann kopiert das Skript den letzten Stand ohne es zu zippen in einen anderen Ordner. Testsystem=1, dann aktiviert, 0=nein, deaktiviert (ohne \ am Ende)
+:: Testsystem aktivieren (1 = ja, 0 = nein)
 set testsystem=0
-set testsystempfad="" 
+set "testsystempfad=D:\Testsystem"
 
-:: Kopie der Datei nach GIT lokal
+:: GIT-Kopie aktivieren (1 = ja, 0 = nein)
 set git=0
-::Hier den Dateiname, z.B. "ABC.yrrg"
-set gitdatei=""
-::Pfad zum GIT-Ordner
-set gitpfad=""
+set "gitdatei=meinedatei.ext"
+set "gitpfad=D:\GitRepo"
 
-:: Erstellung einer Monatssicherung? ja=1  nein=0
+:: Monatssicherung aktivieren
 set monatssicherung=1
 
-:: Erstellung einer Jahressicherung? ja=1  nein=0
+:: Jahressicherung aktivieren
 set jahressicherung=1
 
-:: TAGESSICHERUNG: Aufbewahrungszeit der TAGESSICHERUNGEN in Tagen, Dateien (NICHT ORDNER!!!) über dem Zeitraum werden geloescht (nicht Monats- oder Jahressicherungen)! 0=keine Loeschung, Funktion deaktiviert.
-:: Sinn macht bei eingeschalteter Monats-Sicherung 31 Tage, danach bleibt die letzte Sicherung des Monats im Monatssicherungs-Ordner. 
+:: Aufbewahrungszeit der Tagessicherungen in Tagen
 set aufbewahrungszeit=31
 
-:: LOESCHEN VON MONATSSICHERUNGEN
-:: Diese Funktion loescht die Ordner und Inhalte der Monatssicherungen, die CTER ALS 1 JAHR SIND! Monatssicherungen darunter werden nicht gelöscht! Wenn man überhaupt keine Löschung möchte, l?t man diesen Wert auf 0 stehen!
-:: Jahressicherungen werden NICHT (!) geloescht, ausser man aendert deren Dateiname! 
-set "minAlter=365"
+:: Monatssicherungen loeschen, wenn älter als 365 Tage
 set monataelteralseinjahrloeschen=1
+set minAlter=365
 
+:: ------------------- VALIDIERUNG ------------------------
 
-:: FTP-Server Einstellungen (noch nicht umgesetzt - kommt noch...)
-
-
-
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-::::                                       AB HIER NICHTS MEHR AENDERN!!!!                                          ::::
-::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-:: Prueft, ob Quelle vorhanden
-if not exist "%quelle%" (
-   echo Das Skript wird abgebrochen, den Pfad %quelle% gibt es nicht!
-   Pause
-   EXIT
+:: Pruefen, ob 7-Zip vorhanden ist
+if not exist "%programmpfad%" (
+    echo Fehler: 7-Zip nicht gefunden unter "%programmpfad%"
+    pause
+    exit /b
 )
 
-
+:: Pruefen, ob Quellpfad gesetzt und vorhanden ist
 if "%quelle%"=="" (
-    echo Fehler: Der Quellpfad ist nicht gesetzt!
+    echo Fehler: Quellpfad nicht gesetzt!
     pause
     exit /b
 )
-if "%ziel%"=="" (
-    echo Fehler: Der Zielpfad ist nicht gesetzt!
+if not exist "%quelle%" (
+    echo Fehler: Quellpfad %quelle% existiert nicht!
     pause
     exit /b
 )
 
-:: Datum ermitteln und in Variablen schreiben
+:: Pruefen, ob Zielpfad gesetzt
+if "%ziel%"=="" (
+    echo Fehler: Zielpfad nicht gesetzt!
+    pause
+    exit /b
+)
+
+:: Zielordner ggf. erstellen
+if not exist "%ziel%" (
+    mkdir "%ziel%"
+)
+
+:: ------------------- DATUM ERMITTELN -------------------
+
+:: Datum/Zeit via WMIC (lokalitätsunabhängig)
 for /f %%i in ('wmic os get localdatetime ^| find "."') do set datetime=%%i
 set year=%datetime:~0,4%
 set month=%datetime:~4,2%
@@ -106,90 +117,88 @@ set stunden=%datetime:~8,2%
 set minuten=%datetime:~10,2%
 set sekunden=%datetime:~12,2%
 
+:: ------------------- TAGES-SICHERUNG -------------------
 
-:: Zielpfad - hier die Daten ablegen und Ordner erstellen
-if not exist "%ziel%"\ md "%ziel%"\
+set "zipname=%year%-%month%-%day%-%stunden%-%minuten%-%sekunden%-TC-Tages-Sicherung.zip"
+"%programmpfad%" a "%ziel%\%zipname%" "%quelle%\"
 
-:: Ordner nehmen und per ZIP (7Zip) packen - inkl. Pfad zur EXE Datei
-%programmpfad% a %ziel%\"%year%-%month%-%day%-%stunden%-%minuten%-%sekunden%-TC-Tages-Sicherung.zip" %quelle%
+:: ------------------- TAGESSICHERUNGEN LoeSCHEN -------------------
 
-::::::::::::::::::::::::::::
-:: Alte ZIP-Files (Sicherungen) nach ... Tagen loeschen
 if not %aufbewahrungszeit%==0 (
-   echo Sicherungen, aelter als %aufbewahrungszeit% Tage, werden geloescht! 
-   :: Loeschbefehl
-   forfiles /p %ziel% /m *.* /d -%aufbewahrungszeit% /c "cmd /c del @path"
+    echo Tagessicherungen, älter als %aufbewahrungszeit% Tage, werden geloescht...
+    forfiles /p "%ziel%" /m *.zip /d -%aufbewahrungszeit% /c "cmd /c del @path"
 )
 
-::::::::::::::::::::::::::::
-:: Alte ORDNER (Monatssicherung, aelter als ein Jahr) loeschen. Wenn dies gewaehlt ist, wird alles, ausser dem Jahresarchiv, geloescht.
+:: ------------------- MONATSSICHERUNG -------------------
+
+if not %monatssicherung%==0 (
+    echo Monatssicherung wird erstellt...
+    set "monatspfad=%ziel%\%year%-%month%"
+    if exist "%monatspfad%" rmdir /s /q "%monatspfad%"
+    mkdir "%monatspfad%"
+    "%programmpfad%" a "%monatspfad%\%year%-%month%-TC-Monats-Sicherung.zip" "%quelle%\"
+)
+
+:: ------------------- JAHRESSICHERUNG -------------------
+
+if not %jahressicherung%==0 (
+    echo Jahressicherung wird erstellt...
+    set "jahrespfad=%ziel%\%year%-Jahressicherung"
+    if exist "%jahrespfad%" rmdir /s /q "%jahrespfad%"
+    mkdir "%jahrespfad%"
+    "%programmpfad%" a "%jahrespfad%\%year%-TC-Jahres-Sicherung.zip" "%quelle%\"
+)
+
+:: ------------------- MONATSSICHERUNGEN ALT LoeSCHEN -------------------
+
 if not %monataelteralseinjahrloeschen%==0 (
-    echo Monatssicherungen ?er als ein Jahr werden geloescht! 
-    :: Loeschbefehl
-    for /D %%i in ("%ziel%\*") do (
-        set "Ordner=%%~fi"
-        set "OrdnerName=%%~nxi"
-        call :GetFolderAge "!Ordner!" alter
-        if !alter! gtr %minAlter% (
-            echo ?erprüfe Ordner: !OrdnerName!
-            echo !OrdnerName! | find /i "Jahressicherung" > nul
+    echo Alte Monatssicherungen (älter als %minAlter% Tage) werden ueberprueft...
+    for /d %%D in ("%ziel%\*-*") do (
+        set "ordner=%%~fD"
+        set "name=%%~nxD"
+        call :GetFolderAge "%%~fD" age
+        if !age! GTR %minAlter% (
+            echo ueberpruefe: !name!
+            echo !name! | find /i "Jahressicherung" >nul
             if errorlevel 1 (
-                echo Loesche Ordner: !Ordner!
-                rmdir /s /q "!Ordner!"
+                echo Loesche Ordner: !ordner!
+                rmdir /s /q "!ordner!"
             ) else (
-                echo Ueberspringe Jahressicherung: !Ordner!
+                echo Behalte Jahressicherung: !ordner!
             )
         )
     )
-    goto :eof
 )
+
+:: ------------------- TESTSYSTEM-KOPIE -------------------
+
+if not %testsystem%==0 (
+    echo Testsystem wird aktualisiert...
+    if not exist "%testsystempfad%" mkdir "%testsystempfad%"
+    xcopy "%quelle%\*" "%testsystempfad%\" /s /y /c
+)
+
+:: ------------------- GIT-KOPIE -------------------
+
+if not %git%==0 (
+    echo Kopiere Datei nach GIT...
+    if not exist "%gitpfad%" mkdir "%gitpfad%"
+    xcopy "%quelle%\%gitdatei%" "%gitpfad%\" /s /y /c
+)
+
+echo Sicherung abgeschlossen.
+pause
+exit /b
+
+:: ------------------- FUNKTION: GetFolderAge -------------------
 
 :GetFolderAge
+:: Eingabe: Pfad %1, Ausgabevariable %2
+:: Ermittelt das Alter eines Ordners in Tagen (ueber PowerShell)
 setlocal
-set "Ordner=%~1"
-set "alter=%~2"
-
-rem Ermittelt das Alter des Ordners in Tagen
-for /f %%a in ('robocopy "%Ordner%" null /l /nocopy /is /njh /njs /ndl /nc /ns /np ^| find "Zusammenfassung" ^| find /v "Dateien"') do (
-    for /f %%b in ("%%a") do set "Alter=%%b"
+set "ordner=%~1"
+for /f %%a in ('powershell -nologo -command "(Get-Date) - (Get-Item '%ordner%').CreationTime.TotalDays"') do (
+    set /a age=%%a
 )
-endlocal & set "%alter%=%Alter%"
-
-::::::::::::::::::::::::::::
-:: Monatssicherung
-
-if not %monatssicherung%==0 (
-   echo Monatssicherung wird erstellt.
-   rmdir /s /q "%ziel%\%year%-%month%"
-   if not exist "%ziel%\%year%-%month%" md "%ziel%\%year%-%month%"
-   %programmpfad% a "%ziel%\%year%-%month%\%year%-%month%-TC-Monats-Sicherung.zip" %quelle%
-)
-
-::::::::::::::::::::::::::::
-:: Jahressicherung
-
-if not %jahressicherung%==0 (
-   echo Jahressicherung wird erstellt.
-   rmdir /s /q "%ziel%\%year%-Jahressicherung"
-   if not exist "%ziel%\%year%-Jahressicherung" md "%ziel%\%year%-Jahressicherung"
-   %programmpfad% a "%ziel%\%year%-Jahressicherung\%year%-TC-Jahres-Sicherung.zip" %quelle%
-)
-
-::::::::::::::::::::::::::::
-:: Testsystem
-if not %testsystem%==0 (
-   echo Dateien werden zum Testsystem kopiert.
-   if not exist "%testsystempfad%"\ md "%testsystempfad%"\
-   xcopy %quelle%\*.* %testsystempfad%\ /s /y /c
-)
-
-
-::::::::::::::::::::::::::::
-:: GIT
-if not %git%==0 (
-   echo Dateien werden zum GIT-System kopiert.
-   if not exist "%gitpfad%"\ md "%gitpfad%"\
-   xcopy %quelle%\%gitdatei% %gitpfad%\ /s /y /c
-)
-
-::ENDE SKRIPT
+endlocal & set "%~2=%age%"
+exit /b
