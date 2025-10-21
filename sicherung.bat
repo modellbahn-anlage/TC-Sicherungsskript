@@ -122,11 +122,11 @@ set sekunden=%datetime:~12,2%
 set "zipname=%year%-%month%-%day%-%stunden%-%minuten%-%sekunden%-TC-Tages-Sicherung.zip"
 "%programmpfad%" a "%ziel%\%zipname%" "%quelle%\"
 
-:: ------------------- TAGESSICHERUNGEN LoeSCHEN -------------------
+:: ------------------- TAGESSICHERUNGEN LOESCHEN -------------------
 
 if not %aufbewahrungszeit%==0 (
     echo Tagessicherungen, aelter als %aufbewahrungszeit% Tage, werden geloescht...
-    forfiles /p "%ziel%" /m *.zip /d -%aufbewahrungszeit% /c "cmd /c del @path"
+    forfiles /p "%ziel%" /m *.zip /d -%aufbewahrungszeit% /c "cmd /c del @path" 2>nul  
 )
 
 :: ------------------- MONATSSICHERUNG -------------------
@@ -138,6 +138,8 @@ if not %monatssicherung%==0 (
     mkdir "%monatspfad%"
     "%programmpfad%" a "%monatspfad%\%year%-%month%-TC-Monats-Sicherung.zip" "%quelle%\"
 )
+
+pause
 
 :: ------------------- JAHRESSICHERUNG -------------------
 
