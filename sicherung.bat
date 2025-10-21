@@ -29,7 +29,7 @@ setlocal EnableDelayedExpansion
 :: 2019-02-21: Fehler Variable 7-Zip behoben.  Version 1.5.1
 ::			   Schluss "\" in den Variablen entfernt - fuehrte zu keinen Fehlern, muss autom. in Zukunft ueberprueft werden...
 :: 2019-02-22: Einbau einer Funktion, um Daten zum Testsystem zu kopieren - Version 1.6
-:: 2020-08-29: Variable eingebaut, die später darueber entscheidet, ob nach der Jahressicherung die Monatssicherungen geloescht werden sollen.
+:: 2020-08-29: Variable eingebaut, die spaeter darueber entscheidet, ob nach der Jahressicherung die Monatssicherungen geloescht werden sollen.
 :: 2023-04-13: Datei nach GIT ueberfuehrt
 :: 2023-04-14: Loeschen von alten DATEIEN (nicht Ordnern!) optimiert (Doku angepasst)
 :: Version 2.0
@@ -46,10 +46,10 @@ setlocal EnableDelayedExpansion
 set "programmpfad=C:\Program Files\7-Zip\7z.exe"
 
 :: Quellpfad (Ordner, der gesichert werden soll)
-set "quelle=D:\Datenquelle"
+set "quelle=C:\Test\Datenquelle"
 
 :: Zielpfad fuer Sicherungen
-set "ziel=D:\Backups"
+set "ziel=C:\Test\Backups"
 
 :: Testsystem aktivieren (1 = ja, 0 = nein)
 set testsystem=0
@@ -69,7 +69,7 @@ set jahressicherung=1
 :: Aufbewahrungszeit der Tagessicherungen in Tagen
 set aufbewahrungszeit=31
 
-:: Monatssicherungen loeschen, wenn älter als 365 Tage
+:: Monatssicherungen loeschen, wenn aelter als 365 Tage
 set monataelteralseinjahrloeschen=1
 set minAlter=365
 
@@ -108,7 +108,7 @@ if not exist "%ziel%" (
 
 :: ------------------- DATUM ERMITTELN -------------------
 
-:: Datum/Zeit via WMIC (lokalitätsunabhängig)
+:: Datum/Zeit via WMIC (lokalitaetsunabhaengig)
 for /f %%i in ('wmic os get localdatetime ^| find "."') do set datetime=%%i
 set year=%datetime:~0,4%
 set month=%datetime:~4,2%
@@ -125,7 +125,7 @@ set "zipname=%year%-%month%-%day%-%stunden%-%minuten%-%sekunden%-TC-Tages-Sicher
 :: ------------------- TAGESSICHERUNGEN LoeSCHEN -------------------
 
 if not %aufbewahrungszeit%==0 (
-    echo Tagessicherungen, älter als %aufbewahrungszeit% Tage, werden geloescht...
+    echo Tagessicherungen, aelter als %aufbewahrungszeit% Tage, werden geloescht...
     forfiles /p "%ziel%" /m *.zip /d -%aufbewahrungszeit% /c "cmd /c del @path"
 )
 
@@ -152,7 +152,7 @@ if not %jahressicherung%==0 (
 :: ------------------- MONATSSICHERUNGEN ALT LoeSCHEN -------------------
 
 if not %monataelteralseinjahrloeschen%==0 (
-    echo Alte Monatssicherungen (älter als %minAlter% Tage) werden ueberprueft...
+    ::echo Alte Monatssicherungen (aelter als %minAlter% Tage) werden ueberprueft...
     for /d %%D in ("%ziel%\*-*") do (
         set "ordner=%%~fD"
         set "name=%%~nxD"
