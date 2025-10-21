@@ -171,7 +171,7 @@ if not %monatssicherung%==0 (
 if not %jahressicherung%==0 (
    echo Jahressicherung wird erstellt.
    rmdir /s /q "%ziel%\%year%-Jahressicherung"
-   if not exist "%ziel%\%year%-Jahressicherung" md "%ziel%\%year%-%month%"
+   if not exist "%ziel%\%year%-Jahressicherung" md "%ziel%\%year%-Jahressicherung"
    %programmpfad% a "%ziel%\%year%-Jahressicherung\%year%-TC-Jahres-Sicherung.zip" %quelle%
 )
 
