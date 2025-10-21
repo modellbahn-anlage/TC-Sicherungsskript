@@ -98,12 +98,14 @@ if "%ziel%"=="" (
 )
 
 :: Datum ermitteln und in Variablen schreiben
-set stunden=%time:~-11,2%
-set minuten=%time:~-8,2%
-set sekunden=%time:~-5,2%
-set day=%date:~0,2%
-set month=%date:~3,2%
-set year=%date:~6%
+for /f %%i in ('wmic os get localdatetime ^| find "."') do set datetime=%%i
+set year=%datetime:~0,4%
+set month=%datetime:~4,2%
+set day=%datetime:~6,2%
+set stunden=%datetime:~8,2%
+set minuten=%datetime:~10,2%
+set sekunden=%datetime:~12,2%
+
 
 :: Zielpfad - hier die Daten ablegen und Ordner erstellen
 if not exist "%ziel%"\ md "%ziel%"\
