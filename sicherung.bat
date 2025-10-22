@@ -4,19 +4,11 @@ setlocal EnableDelayedExpansion
 :: ############################################################
 :: BACKUP-SKRIPT VERSION 2.2
 :: Erstellt ZIP-Sicherungen mit Tages-, Monats- und Jahresarchivierung
-:: Autor: Martin Fitzel
+:: Autor: Martin Fitzel - http://www.modellbahn-anlage.de
 :: ############################################################
 ::
 ::
-::
 :: Wenn Sie das Skript verwenden, koennen Sie uns ueber https://spenden.modellbahn-anlage.de gerne eine Kleinigkeit zukommen lassen, dann wird das Skript auch weiterentwickelt :)
-::
-:: Dieses Skript erstellt einen Ordner oder Datei mit dem Datum der Sicherung
-:: ***********************************************************************************************************************************
-:: Skript Version 2.0
-:: Ersteller: Martin Fitzel - http://www.modellbahn-anlage.de
-:: ***********************************************************************************************************************************
-::
 ::
 ::
 :: CHANGELOG
