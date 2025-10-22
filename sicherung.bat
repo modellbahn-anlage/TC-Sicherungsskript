@@ -37,6 +37,7 @@ setlocal EnableDelayedExpansion
 :: 2024-01-06: Vergessene Codezeilen durch GIT wieder eingefuegt :) 
 :: 2025-08-11: Schreibfehler behoben, GIT Repository angelegt
 ::             Diverse Aenderungen, Anpassungen
+:: 2025-10-22: Diverse Aenderungen - Optimierung des Skripts - kein Loeschen der Ordner - hier noch Fehler!
 ::
 ::
 ::
@@ -46,10 +47,10 @@ setlocal EnableDelayedExpansion
 set "programmpfad=C:\Program Files\7-Zip\7z.exe"
 
 :: Quellpfad (Ordner, der gesichert werden soll)
-set "quelle=C:\Test\Datenquelle"
+set "quelle=D:\Backup\Datenquelle"
 
 :: Zielpfad fuer Sicherungen
-set "ziel=C:\Test\Backups"
+set "ziel=D:\Backup\Backup"
 
 :: Testsystem aktivieren (1 = ja, 0 = nein)
 set testsystem=0
@@ -72,6 +73,13 @@ set aufbewahrungszeit=31
 :: Monatssicherungen loeschen, wenn aelter als 365 Tage
 set monataelteralseinjahrloeschen=1
 set minAlter=365
+
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::                                       AB HIER NICHTS MEHR AENDERN!!!!                                          ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
 
 :: ------------------- VALIDIERUNG ------------------------
 
@@ -117,64 +125,36 @@ set stunden=%datetime:~8,2%
 set minuten=%datetime:~10,2%
 set sekunden=%datetime:~12,2%
 
-:: ------------------- TAGES-SICHERUNG -------------------
+
+rem ------------------- TAGES-SICHERUNG -------------------
 
 set "zipname=%year%-%month%-%day%-%stunden%-%minuten%-%sekunden%-TC-Tages-Sicherung.zip"
 "%programmpfad%" a "%ziel%\%zipname%" "%quelle%\"
 
-:: ------------------- TAGESSICHERUNGEN LOESCHEN -------------------
-
-if not %aufbewahrungszeit%==0 (
-    echo Tagessicherungen, aelter als %aufbewahrungszeit% Tage, werden geloescht...
-    forfiles /p "%ziel%" /m *.zip /d -%aufbewahrungszeit% /c "cmd /c del @path" 2>nul  
-)
 
 :: ------------------- MONATSSICHERUNG -------------------
 
-if not %monatssicherung%==0 (
-    echo Monatssicherung wird erstellt...
-    set "monatspfad=%ziel%\%year%-%month%"
-    if exist "%monatspfad%" rmdir /s /q "%monatspfad%"
-    mkdir "%monatspfad%"
-    "%programmpfad%" a "%monatspfad%\%year%-%month%-TC-Monats-Sicherung.zip" "%quelle%\"
+if not "%monatssicherung%"==0 (
+   echo Monatssicherung wird erstellt.
+   rmdir /s /q "%ziel%\%year%-%month%"
+   if not exist "%ziel%\%year%-%month%" md "%ziel%\%year%-%month%"
+   "%programmpfad%" a "%ziel%\%year%-%month%\%year%-%month%-TC-Monats-Sicherung.zip" %quelle%
 )
 
-pause
 
 :: ------------------- JAHRESSICHERUNG -------------------
 
-if not %jahressicherung%==0 (
-    echo Jahressicherung wird erstellt...
-    set "jahrespfad=%ziel%\%year%-Jahressicherung"
-    if exist "%jahrespfad%" rmdir /s /q "%jahrespfad%"
-    mkdir "%jahrespfad%"
-    "%programmpfad%" a "%jahrespfad%\%year%-TC-Jahres-Sicherung.zip" "%quelle%\"
+if not "%jahressicherung%"==0 (
+   echo Jahressicherung wird erstellt.
+   rmdir /s /q "%ziel%\%year%-Jahressicherung"
+   if not exist "%ziel%\%year%-Jahressicherung" md "%ziel%\%year%-%month%"
+   "%programmpfad%" a "%ziel%\%year%-Jahressicherung\%year%-TC-Jahres-Sicherung.zip" %quelle%
 )
 
-:: ------------------- MONATSSICHERUNGEN ALT LoeSCHEN -------------------
-
-if not %monataelteralseinjahrloeschen%==0 (
-    ::echo Alte Monatssicherungen (aelter als %minAlter% Tage) werden ueberprueft...
-    for /d %%D in ("%ziel%\*-*") do (
-        set "ordner=%%~fD"
-        set "name=%%~nxD"
-        call :GetFolderAge "%%~fD" age
-        if !age! GTR %minAlter% (
-            echo ueberpruefe: !name!
-            echo !name! | find /i "Jahressicherung" >nul
-            if errorlevel 1 (
-                echo Loesche Ordner: !ordner!
-                rmdir /s /q "!ordner!"
-            ) else (
-                echo Behalte Jahressicherung: !ordner!
-            )
-        )
-    )
-)
 
 :: ------------------- TESTSYSTEM-KOPIE -------------------
 
-if not %testsystem%==0 (
+if not "%testsystem%"==0 (
     echo Testsystem wird aktualisiert...
     if not exist "%testsystempfad%" mkdir "%testsystempfad%"
     xcopy "%quelle%\*" "%testsystempfad%\" /s /y /c
@@ -182,25 +162,64 @@ if not %testsystem%==0 (
 
 :: ------------------- GIT-KOPIE -------------------
 
-if not %git%==0 (
+if not "%git%"==0 (
     echo Kopiere Datei nach GIT...
     if not exist "%gitpfad%" mkdir "%gitpfad%"
     xcopy "%quelle%\%gitdatei%" "%gitpfad%\" /s /y /c
 )
 
-echo Sicherung abgeschlossen.
-pause
+:: ------------------- TAGESSICHERUNGEN NACH... TAGEN LOESCHEN (KONFIG) -------------------
+
+if not "%aufbewahrungszeit%"==0 (
+    echo Tagessicherungen, aelter als %aufbewahrungszeit% Tage, werden geloescht...
+    forfiles /p "%ziel%" /m *.zip /d -%aufbewahrungszeit% /c "cmd /c del @path" 2>nul  
+)
+
+
+
+:: ------------------- MONATSSICHERUNGEN ALT LOESCHEN -------------------
+
+:: Dieser Teil ist noch nicht funktional!!!
+
 exit /b
 
-:: ------------------- FUNKTION: GetFolderAge -------------------
+:: Alte ORDNER (Monatssicherung), die aelter als %minAlter% Tage sind, loeschen (ausser "Jahressicherung")
+
+if not %monataelteralseinjahrloeschen%==0 (
+    echo Monatssicherungen aelter als ein Jahr werden geloescht! 
+    :: Loeschbefehl
+    for /D %%i in ("%ziel%\*") do (
+        set "Ordner=%%~fi"
+        set "OrdnerName=%%~nxi"
+        call :GetFolderAge "!Ordner!" alter
+        if !alter! gtr %minAlter% (
+            echo Ueberpruefe Ordner: !OrdnerName!
+            echo !OrdnerName! | find /i "Jahressicherung" > nul
+            if errorlevel 1 (
+                echo Loesche Ordner: !Ordner!
+                rmdir /s /q "!Ordner!"
+            ) else (
+                echo Ueerspringe Jahressicherung: !Ordner!
+            )
+        )
+    )
+    goto :eof
+)
 
 :GetFolderAge
-:: Eingabe: Pfad %1, Ausgabevariable %2
-:: Ermittelt das Alter eines Ordners in Tagen (ueber PowerShell)
 setlocal
-set "ordner=%~1"
-for /f %%a in ('powershell -nologo -command "(Get-Date) - (Get-Item '%ordner%').CreationTime.TotalDays"') do (
-    set /a age=%%a
+set "Ordner=%~1"
+set "alter=%~2"
+
+rem Ermittelt das Alter des Ordners in Tagen
+for /f %%a in ('robocopy "%Ordner%" null /l /nocopy /is /njh /njs /ndl /nc /ns /np ^| find "Zusammenfassung" ^| find /v "Dateien"') do (
+    for /f %%b in ("%%a") do set "Alter=%%b"
 )
-endlocal & set "%~2=%age%"
+
+endlocal & set "%alter%=%Alter%"
+
+
+
+echo Sicherung abgeschlossen.
+pause
 exit /b
