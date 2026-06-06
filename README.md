@@ -1,2 +1,2 @@
 # TC-Sicherungsskript
-Das Sicherungsskript für TrainController
+Das Sicherungsskript der https://www.modellbahn-anlage.de für TrainController oder andere Sicherungsaufgaben.
