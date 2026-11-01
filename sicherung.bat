@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 :: ############################################################
-:: BACKUP-SKRIPT VERSION 2.2
+:: BACKUP-SKRIPT VERSION 2.3
 :: Erstellt ZIP-Sicherungen mit Tages-, Monats- und Jahresarchivierung
 :: Autor: Martin Fitzel - http://www.modellbahn-anlage.de
 :: ############################################################
@@ -30,6 +30,7 @@ setlocal EnableDelayedExpansion
 :: 2025-08-11: Schreibfehler behoben, GIT Repository angelegt
 ::             Diverse Aenderungen, Anpassungen
 :: 2025-10-22: Diverse Aenderungen - Optimierung des Skripts - kein Loeschen der Ordner - hier noch Fehler!
+:: 2026-11-01: Datumsermittlung geändert auf moderne Methode
 ::
 ::
 ::
@@ -65,6 +66,9 @@ set aufbewahrungszeit=31
 :: Monatssicherungen loeschen, wenn aelter als 365 Tage
 set monataelteralseinjahrloeschen=1
 set minAlter=365
+
+:: 7-Zip nutzen?
+
 
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -108,8 +112,8 @@ if not exist "%ziel%" (
 
 :: ------------------- DATUM ERMITTELN -------------------
 
-:: Datum/Zeit via WMIC (lokalitaetsunabhaengig)
-for /f %%i in ('wmic os get localdatetime ^| find "."') do set datetime=%%i
+:: Datum/Zeit via PowerShell (WMIC-Ersatz)
+for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMddHHmmss"') do set datetime=%%i
 set year=%datetime:~0,4%
 set month=%datetime:~4,2%
 set day=%datetime:~6,2%
