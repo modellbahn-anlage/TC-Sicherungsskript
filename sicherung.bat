@@ -40,7 +40,7 @@ setlocal EnableDelayedExpansion
 :: 2026-11-02:
 ::    Konfiguration in sicherung.conf ausgelagert
 ::    Automatische Erzeugung der Konfigurationsdatei
-::    Version 3.1
+::    Version 4.0 alpha
 
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
