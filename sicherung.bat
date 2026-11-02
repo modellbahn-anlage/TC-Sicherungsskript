@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 :: ############################################################
-:: BACKUP-SKRIPT VERSION 3.1
+:: BACKUP-SKRIPT VERSION 4.0 alpha
 :: Erstellt ZIP-Sicherungen mit Tages-, Monats- und Jahresarchivierung
 ::
 :: Autor: Martin Fitzel
