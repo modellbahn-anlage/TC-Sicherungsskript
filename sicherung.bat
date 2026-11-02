@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+
 :: ############################################################
 :: BACKUP-SKRIPT VERSION 4.0 alpha
 :: Erstellt ZIP-Sicherungen mit Tages-, Monats- und Jahresarchivierung
