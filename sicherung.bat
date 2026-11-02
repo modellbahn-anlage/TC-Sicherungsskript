@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 :: ############################################################
-:: BACKUP-SKRIPT VERSION 3.0
+:: BACKUP-SKRIPT VERSION 3.1
 :: Erstellt ZIP-Sicherungen mit Tages-, Monats- und Jahresarchivierung
 ::
 :: Autor: Martin Fitzel
@@ -37,68 +37,97 @@ setlocal EnableDelayedExpansion
 ::    Ordneraltersberechnung modernisiert
 ::    Diverse Fehlerkorrekturen
 ::    Version 3.0
-
-
-:: ------------------- KONFIGURATION ----------------------
-
-set "programmpfad=C:\Program Files\7-Zip\7z.exe"
-
-:: Quellpfad
-set "quelle=D:\Backup\Datenquelle"
-
-:: Zielpfad
-set "ziel=D:\Backup\Backup"
-
-:: Testsystem aktivieren (1 = ja, 0 = nein)
-set testsystem=0
-set "testsystempfad=D:\Testsystem"
-
-:: GIT-Kopie aktivieren (1 = ja, 0 = nein)
-set git=0
-set "gitdatei=meinedatei.ext"
-set "gitpfad=D:\GitRepo"
-
-:: Monatssicherung aktivieren
-set monatssicherung=1
-
-:: Jahressicherung aktivieren
-set jahressicherung=1
-
-:: Aufbewahrungszeit Tagessicherung
-set aufbewahrungszeit=31
-
-:: Monatssicherungen nach einem Jahr loeschen
-set monataelteralseinjahrloeschen=1
-set minAlter=365
+:: 2026-11-02:
+::    Konfiguration in sicherung.conf ausgelagert
+::    Automatische Erzeugung der Konfigurationsdatei
+::    Version 3.1
 
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-::::                    AB HIER NICHTS AENDERN                     ::::
+::::                  KONFIGURATION LADEN                         ::::
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+set "config=%~dp0sicherung.conf"
 
-:: ------------------- VALIDIERUNG ------------------------
+if not exist "%config%" (
 
-if not exist "%programmpfad%" (
-    echo Fehler: 7-Zip nicht gefunden unter "%programmpfad%"
+    echo Konfigurationsdatei nicht gefunden.
+    echo Erzeuge Standard-Konfiguration...
+
+    (
+        echo @echo off
+        echo.
+        echo :: Pfad zu 7-Zip
+        echo set "programmpfad=C:\Program Files\7-Zip\7z.exe"
+        echo.
+        echo :: Quellpfad
+        echo set "quelle=D:\Backup\Datenquelle"
+        echo.
+        echo :: Zielpfad
+        echo set "ziel=D:\Backup\Backup"
+        echo.
+        echo :: Testsystem
+        echo set testsystem=0
+        echo set "testsystempfad=D:\Testsystem"
+        echo.
+        echo :: Git
+        echo set git=0
+        echo set "gitdatei=meinedatei.ext"
+        echo set "gitpfad=D:\GitRepo"
+        echo.
+        echo :: Sicherungen
+        echo set monatssicherung=1
+        echo set jahressicherung=1
+        echo.
+        echo :: Aufbewahrung
+        echo set aufbewahrungszeit=31
+        echo set monataelteralseinjahrloeschen=1
+        echo set minAlter=365
+    )>"%config%"
+
+    echo.
+    echo Die Datei sicherung.conf wurde erstellt.
+    echo Bitte anpassen und das Skript erneut starten.
+    echo.
+    pause
+    exit /b
+)
+
+call "%config%"
+
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::                      VALIDIERUNG                            ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+if not defined programmpfad (
+    echo Fehler: programmpfad nicht gesetzt!
     pause
     exit /b 1
 )
 
-if "%quelle%"=="" (
-    echo Fehler: Quellpfad nicht gesetzt!
+if not defined quelle (
+    echo Fehler: quelle nicht gesetzt!
+    pause
+    exit /b 1
+)
+
+if not defined ziel (
+    echo Fehler: ziel nicht gesetzt!
+    pause
+    exit /b 1
+)
+
+if not exist "%programmpfad%" (
+    echo Fehler: 7-Zip nicht gefunden unter
+    echo %programmpfad%
     pause
     exit /b 1
 )
 
 if not exist "%quelle%" (
-    echo Fehler: Quellpfad %quelle% existiert nicht!
-    pause
-    exit /b 1
-)
-
-if "%ziel%"=="" (
-    echo Fehler: Zielpfad nicht gesetzt!
+    echo Fehler: Quellpfad existiert nicht:
+    echo %quelle%
     pause
     exit /b 1
 )
@@ -108,23 +137,31 @@ if not exist "%ziel%" (
 )
 
 
-:: ------------------- DATUM ERMITTELN -------------------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::                      DATUM ERMITTELN                        ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMddHHmmss"') do set datetime=%%i
 
 set year=%datetime:~0,4%
 set month=%datetime:~4,2%
 set day=%datetime:~6,2%
+
 set stunden=%datetime:~8,2%
 set minuten=%datetime:~10,2%
 set sekunden=%datetime:~12,2%
 
 
-:: ------------------- TAGES-SICHERUNG -------------------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::                      TAGES-SICHERUNG                       ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 set "zipname=%year%-%month%-%day%-%stunden%-%minuten%-%sekunden%-TC-Tages-Sicherung.zip"
 
+echo.
+echo =============================================
 echo Erstelle Tagessicherung...
+echo =============================================
 
 "%programmpfad%" a "%ziel%\%zipname%" "%quelle%\"
 
@@ -135,19 +172,22 @@ if errorlevel 1 (
 )
 
 
-:: ------------------- MONATSSICHERUNG -------------------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::                     MONATSSICHERUNG                        ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 if not "%monatssicherung%"=="0" (
 
-    echo Monatssicherung wird erstellt...
+    echo.
+    echo Erstelle Monatssicherung...
 
-    rmdir /s /q "%ziel%\%year%-%month%"
+    rmdir /s /q "%ziel%\%year%-%month%" 2>nul
 
     if not exist "%ziel%\%year%-%month%" (
         md "%ziel%\%year%-%month%"
     )
 
-    "%programmpfad%" a "%ziel%\%year%-%month%\%year%-%month%-TC-Monats-Sicherung.zip" "%quelle%"
+    "%programmpfad%" a "%ziel%\%year%-%month%\%year%-%month%-TC-Monats-Sicherung.zip" "%quelle%\"
 
     if errorlevel 1 (
         echo Fehler bei der Monatssicherung!
@@ -157,19 +197,22 @@ if not "%monatssicherung%"=="0" (
 )
 
 
-:: ------------------- JAHRESSICHERUNG -------------------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::                     JAHRESSICHERUNG                        ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 if not "%jahressicherung%"=="0" (
 
-    echo Jahressicherung wird erstellt...
+    echo.
+    echo Erstelle Jahressicherung...
 
-    rmdir /s /q "%ziel%\%year%-Jahressicherung"
+    rmdir /s /q "%ziel%\%year%-Jahressicherung" 2>nul
 
     if not exist "%ziel%\%year%-Jahressicherung" (
         md "%ziel%\%year%-Jahressicherung"
     )
 
-    "%programmpfad%" a "%ziel%\%year%-Jahressicherung\%year%-TC-Jahres-Sicherung.zip" "%quelle%"
+    "%programmpfad%" a "%ziel%\%year%-Jahressicherung\%year%-TC-Jahres-Sicherung.zip" "%quelle%\"
 
     if errorlevel 1 (
         echo Fehler bei der Jahressicherung!
@@ -179,10 +222,13 @@ if not "%jahressicherung%"=="0" (
 )
 
 
-:: ------------------- TESTSYSTEM -------------------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::                        TESTSYSTEM                          ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 if not "%testsystem%"=="0" (
 
+    echo.
     echo Aktualisiere Testsystem...
 
     if not exist "%testsystempfad%" (
@@ -193,10 +239,13 @@ if not "%testsystem%"=="0" (
 )
 
 
-:: ------------------- GIT-KOPIE -------------------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::                         GIT-KOPIE                          ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 if not "%git%"=="0" (
 
+    echo.
     echo Kopiere Datei nach GIT...
 
     if not exist "%gitpfad%" (
@@ -207,20 +256,26 @@ if not "%git%"=="0" (
 )
 
 
-:: ------------------- ALTE TAGESSICHERUNGEN LOESCHEN -------------------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::                TAGESSICHERUNGEN LOESCHEN                  ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 if not "%aufbewahrungszeit%"=="0" (
 
+    echo.
     echo Loesche Tagessicherungen aelter als %aufbewahrungszeit% Tage...
 
     forfiles /p "%ziel%" /m *-TC-Tages-Sicherung.zip /d -%aufbewahrungszeit% /c "cmd /c del @path" 2>nul
 )
 
 
-:: ------------------- ALTE MONATSSICHERUNGEN LOESCHEN -------------------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::::               MONATSSICHERUNGEN LOESCHEN                  ::::
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 if not "%monataelteralseinjahrloeschen%"=="0" (
 
+    echo.
     echo Pruefe Monatssicherungen...
 
     for /D %%i in ("%ziel%\*") do (
@@ -238,6 +293,7 @@ if not "%monataelteralseinjahrloeschen%"=="0" (
 
                 if !alter! gtr %minAlter% (
 
+                    echo.
                     echo Loesche alten Monatsordner:
                     echo !Ordner!
 
